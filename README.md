@@ -6,10 +6,10 @@ Pronounce it in whatever way seems best to you.
 If you don't know what this is, or haven't built Linux From Scratch on your own before, you should go through the LFS [book](https://linuxfromscratch.org) before using this script.
 
 ## How To Use
-Basically, just run `sudo ./mylfs.sh --build-all` and then stare at your terminal for several hours. Maybe meditate on life or something while you wait. Or maybe clean your room or do your dishes finally. I don't know. Do whatever you want. Maybe by the end of the script, you'll realize why you love linux so much: you love it because it is *hard*. Just like going to the moon, god dammit.
+Basically, just run `sudo ./build.sh --build-all` and then stare at your terminal for several hours. Maybe meditate on life or something while you wait. Or maybe clean your room or do your dishes finally. I don't know. Do whatever you want. Maybe by the end of the script, you'll realize why you love linux so much: you love it because it is *hard*. Just like going to the moon, god dammit.
 
 ```
-$ sudo ./mylfs.sh --help
+$ sudo ./build.sh --help
 
 Welcome to MyLFS.
 
@@ -114,43 +114,43 @@ If something breaks over the course of the build, you can examine the build logs
 
 For example, say the GRUB build in phase 4 broke:
 ```sh
-sudo ./mylfs.sh --start-phase 4 --start-package grub
+sudo ./build.sh --start-phase 4 --start-package grub
 ```
 This will start the script up again at the phase 4 GRUB build, and continue on to the remaining packages.
 
 
 Another example. Say you just changed your kernel config file a bit and need to recompile:
 ```sh
-sudo ./mylfs.sh --start-phase 4 --start-package linux --one-off
+sudo ./build.sh --start-phase 4 --start-package linux --one-off
 ```
 The `--one-off` flag tells the script to exit once the starting package has been completed.
 
 
 The real magic of MyLFS is that you can apply "extensions" to the script in order to automatically customize your LFS system.
 ```sh
-sudo ./mylfs.sh --build-all --extend ./example_extension
+sudo ./build.sh --build-all --extend ./example_extension
 ```
 Details on how extensions work can be found in `example_extension/README`.
 
 
 If you want to poke around inside the image file without booting into it, you can simply use the `--mount` command like so:
 ```sh
-sudo ./mylfs.sh --mount
+sudo ./build.sh --mount
 ```
 This will mount the root partition of the IMG file under `./mnt/lfs` (i.e. not `/mnt` under the root directory). When you're done, you can unmount with the following:
 ```sh
-sudo ./mylfs.sh --umount
+sudo ./build.sh --umount
 ```  
 
 If you want to install the LFS IMG file onto a drive of some kind, use:
 ```sh
-sudo ./mylfs.sh --install /dev/<devname>
+sudo ./build.sh --install /dev/<devname>
 ```
 
 
 Finally, to clean your workspace:
 ```sh
-sudo ./mylfs.sh --clean
+sudo ./build.sh --clean
 ```
 This will unmount the IMG file (if it is mounted), delete it, and delete the logs under `./logs/`. It will not delete the cached package archives under `./packages/`, but if you really want to do that you can easily `rm -f ./packages/*`.  
 
