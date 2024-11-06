@@ -1,7 +1,7 @@
 # Gettext Phase 4
 ./configure --prefix=/usr    \
             --disable-static \
-            --docdir=/usr/share/doc/gettext-0.21
+            --docdir=/usr/share/doc/gettext-0.22.5
 
 make
 
@@ -13,5 +13,5 @@ then
 fi
 
 make install
-chmod 0755 /usr/lib/preloadable_libintl.so
+chmod -v 0755 /usr/lib/preloadable_libintl.so
 

@@ -2,7 +2,7 @@
 ./configure --prefix=/usr    \
             --enable-cxx     \
             --disable-static \
-            --docdir=/usr/share/doc/gmp-6.2.1
+            --docdir=/usr/share/doc/gmp-6.3.0
 
 make
 make html
@@ -20,6 +20,8 @@ fi
 #    echo "ERROR: GMP tests failed. Check /sources/stage6/gmp_test.log for more info."
 #    exit -1
 #fi
+
+awk '/# PASS:/{total+=$3} ; END{print total}' gmp-check-log
 
 make install
 make install-html

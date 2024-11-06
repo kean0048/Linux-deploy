@@ -45,8 +45,8 @@ autoconf
 automake
 openssl
 kmod
-libffi
 elfutils
+libffi
 python
 flitcore
 wheel

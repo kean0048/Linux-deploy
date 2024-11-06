@@ -1,5 +1,5 @@
 # Zstd Phase 4
-patch -Np1 -i ../$(basename $PATCH_ZSTD)
+# patch -Np1 -i ../$(basename $PATCH_ZSTD)
 
 make prefix=/usr
 

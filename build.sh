@@ -276,7 +276,7 @@ function init_image {
 	
     echo -n "Creating basic directory layout... "
 
-    # LFS 11.2 Section 4.2
+    # LFS 12.2 Section 4.2
     mkdir -p $LFS/{etc,var}
     mkdir -p $LFS/usr/{bin,lib,sbin}
     for i in bin lib sbin
@@ -286,34 +286,39 @@ function init_image {
     case $(uname -m) in
         x86_64) mkdir -p $LFS/lib64 ;;
     esac
-    mkdir -p $LFS/tools
+    mkdir -p $LFS/tool
+	
 
-    # LFS 11.2 Section 7.3
+    # LFS 12.2 Section 7.3
     mkdir -p $LFS/{dev,proc,sys,run}
 
-    # LFS 11.2 Section 7.5
-    mkdir -p $LFS/{boot,home,mnt,opt,srv}
-    mkdir -p $LFS/etc/{opt,sysconfig}
-    mkdir -p $LFS/lib/firmware
-    mkdir -p $LFS/media/{floppy,cdrom}
-    mkdir -p $LFS/usr/{,local/}{include,src}
-    mkdir -p $LFS/usr/local/{bin,lib,sbin}
-    mkdir -p $LFS/usr/{,local/}share/{color,dict,doc,info,locale,man}
-    mkdir -p $LFS/usr/{,local/}share/{misc,terminfo,zoneinfo}
-    mkdir -p $LFS/usr/{,local/}share/man/man{1..8}
-    mkdir -p $LFS/var/{cache,local,log,mail,opt,spool}
-    mkdir -p $LFS/var/lib/{color,misc,locate}
-    ln -sf /run $LFS/var/run
-    ln -sf /run/lock $LFS/var/lock
-    install -d -m 0750 $LFS/root
-    install -d -m 1777 $LFS/tmp $LFS/var/tmp
+    # LFS 12.2 Section 7.5
+    mkdir -pv /etc/{opt,sysconfig}
+	mkdir -pv /lib/firmware
+	mkdir -pv /media/{floppy,cdrom}
+	mkdir -pv /usr/{,local/}{include,src}
+	mkdir -pv /usr/lib/locale
+	mkdir -pv /usr/local/{bin,lib,sbin}
+	mkdir -pv /usr/{,local/}share/{color,dict,doc,info,locale,man}
+	mkdir -pv /usr/{,local/}share/{misc,terminfo,zoneinfo}
+	mkdir -pv /usr/{,local/}share/man/man{1..8}
+	mkdir -pv /var/{cache,local,log,mail,opt,spool}
+	mkdir -pv /var/lib/{color,misc,locate}
 
-    # LFS 11.2 Section 7.6
+	ln -sfv /run /var/run
+	ln -sfv /run/lock /var/lock
+
+	install -dv -m 0750 /root
+	install -dv -m 1777 /tmp /var/tmp
+
+    # LFS 12.2 Section 7.6
     ln -s /proc/self/mounts $LFS/etc/mtab
-    touch $LFS/var/log/{btmp,lastlog,faillog,wtmp}
-    chgrp 13 $LFS/var/log/lastlog # 13 == utmp
-    chmod 664 $LFS/var/log/lastlog
-    chmod 600 $LFS/var/log/btmp
+	localedef -i C -f UTF-8 C.UTF-8
+
+    touch /var/log/{btmp,lastlog,faillog,wtmp}
+	chgrp -v utmp /var/log/lastlog
+	chmod -v 664  /var/log/lastlog
+	chmod -v 600  /var/log/btmp
 
     # in no particular part of the book, but still needed
     cp ./bk/config-6.10.11 $LFS/boot
@@ -349,14 +354,16 @@ function init_image {
 
     # mount stuff from the host onto the target disk
     mount --bind /dev $LFS/dev
-    mount --bind /dev/pts $LFS/dev/pts
+    mount -vt devpts devpts -o gid=5,mode=0620 $LFS/dev/pts
     mount -t proc proc $LFS/proc
     mount -t sysfs sysfs $LFS/sys
     mount -t tmpfs tmpfs $LFS/run
 
     if [ -h $LFS/dev/shm ]; then
-      mkdir -p $LFS/$(readlink $LFS/dev/shm)
-    fi
+	  install -v -d -m 1777 $LFS$(realpath /dev/shm)
+	else
+	  mount -vt tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
+	fi
 
     if [ ! -f build-state ]; then
         touch build-state
@@ -399,7 +406,7 @@ function download_packages {
         $VERBOSE && echo -n "Downloading '$url'... "
         if ! echo $ALREADY_DOWNLOADED | grep $(basename $url) > /dev/null
         then
-            if ! curl --location --silent --output $PACKAGE_DIR/$(basename $url) $url
+            if ! curl --retry 5 -C - --location --silent --output $PACKAGE_DIR/$(basename $url) $url
             then
                 echo -e "\nERROR: Failed to download URL '$url'"
                 exit 1

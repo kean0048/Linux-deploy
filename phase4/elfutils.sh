@@ -13,6 +13,6 @@ then
 fi
 
 make -C libelf install
-install -m644 config/libelf.pc /usr/lib/pkgconfig
+install -vm644 config/libelf.pc /usr/lib/pkgconfig
 rm /usr/lib/libelf.a
 

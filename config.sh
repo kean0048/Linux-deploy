@@ -12,6 +12,7 @@ FULLPATH=$(cd $(dirname $0) && pwd)
 export LFS_VERSION=${LFS_VERSION:-12.2}   # LFS version
 export KERNELVERS=${KERNELVERS:-6.10.11}    # Kernel version
 export LFS_TGT=$(uname -m)-lfs-linux-gnu
+export ROOT_PASSWD=root
 
 # #######################
 # Paths and Directories

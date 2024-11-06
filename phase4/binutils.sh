@@ -1,11 +1,4 @@
 # Binutils Phase 4
-EXPECTOUT=$(expect -c 'spawn ls')
-if [ "$EXPECTOUT" != "$(echo -ne 'spawn ls\r\n')" ]
-then
-    echo $EXPECTOUT
-    exit 1
-fi
-
 mkdir build
 cd build
 
@@ -17,7 +10,9 @@ cd build
              --enable-shared     \
              --disable-werror    \
              --enable-64-bit-bfd \
-             --with-system-zlib
+             --enable-new-dtags  \
+             --with-system-zlib  \
+             --enable-default-hash-style=gnu
 
 make tooldir=/usr
 
@@ -30,5 +25,5 @@ fi
 
 make tooldir=/usr install
 
-rm -f /usr/lib/lib{bfd,ctf,ctf-nobfd,opcodes}.a
+rm -fv /usr/lib/lib{bfd,ctf,ctf-nobfd,gprofng,opcodes,sframe}.a
 

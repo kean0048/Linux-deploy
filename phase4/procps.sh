@@ -1,15 +1,17 @@
 # Procps-ng Phase 4
-./configure --prefix=/usr                            \
-            --docdir=/usr/share/doc/procps-ng-4.0.0  \
-            --disable-static                         \
-            --disable-kill
+./configure --prefix=/usr                           \
+            --docdir=/usr/share/doc/procps-ng-4.0.4 \
+            --disable-static                        \
+            --disable-kill                          \
+            --with-systemd
 
-make
+make src_w_LDADD='$(LDADD) -lsystemd'
 
 if $RUN_TESTS
 then
     set +e
-    make check
+    chown -R tester .
+	su tester -c "PATH=$PATH make check"
     set -e
 fi
 

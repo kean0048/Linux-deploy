@@ -1,5 +1,5 @@
 # Automake Phase 4
-./configure --prefix=/usr --docdir=/usr/share/doc/automake-1.16.5
+./configure --prefix=/usr --docdir=/usr/share/doc/automake-1.17
 
 make
 
