@@ -21,7 +21,7 @@ fi
 #    exit -1
 #fi
 
-awk '/# PASS:/{total+=$3} ; END{print total}' gmp-check-log
+# awk '/# PASS:/{total+=$3} ; END{print total}' gmp-check-log
 
 make install
 make install-html

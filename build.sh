@@ -261,12 +261,6 @@ function init_image {
     mkdir -p $LFS
     mount -t $LFS_FS $LOOP_P2 $LFS
 	e2label $LOOP_P2 $LFSROOTLABEL
-	
-    # setup EFI partition
-    mkfs.fat -F32 $LOOP_P1
-    mkdir -p $LFS/boot
-    mount $LOOP_P1 $LFS/boot
-    dosfslabel $LOOP_P1 $LFSEFILABEL
     
     rm -rf $LFS/lost+found
 
@@ -286,40 +280,43 @@ function init_image {
     case $(uname -m) in
         x86_64) mkdir -p $LFS/lib64 ;;
     esac
-    mkdir -p $LFS/tool
-	
+    mkdir -p $LFS/tool   
 
     # LFS 12.2 Section 7.3
     mkdir -p $LFS/{dev,proc,sys,run}
 
     # LFS 12.2 Section 7.5
-    mkdir -pv /etc/{opt,sysconfig}
-	mkdir -pv /lib/firmware
-	mkdir -pv /media/{floppy,cdrom}
-	mkdir -pv /usr/{,local/}{include,src}
-	mkdir -pv /usr/lib/locale
-	mkdir -pv /usr/local/{bin,lib,sbin}
-	mkdir -pv /usr/{,local/}share/{color,dict,doc,info,locale,man}
-	mkdir -pv /usr/{,local/}share/{misc,terminfo,zoneinfo}
-	mkdir -pv /usr/{,local/}share/man/man{1..8}
-	mkdir -pv /var/{cache,local,log,mail,opt,spool}
-	mkdir -pv /var/lib/{color,misc,locate}
-
-	ln -sfv /run /var/run
-	ln -sfv /run/lock /var/lock
-
-	install -dv -m 0750 /root
-	install -dv -m 1777 /tmp /var/tmp
-
+ 	mkdir -p $LFS/{boot,home,mnt,opt,srv}
+    mkdir -p $LFS/etc/{opt,sysconfig}
+    mkdir -p $LFS/lib/firmware
+    mkdir -p $LFS/media/{floppy,cdrom}
+    mkdir -p $LFS/usr/{,local/}{include,src}
+    mkdir -p $LFS/usr/local/{bin,lib,sbin}
+    mkdir -p $LFS/usr/bin/locale
+    mkdir -p $LFS/usr/{,local/}share/{color,dict,doc,info,locale,man}
+    mkdir -p $LFS/usr/{,local/}share/{misc,terminfo,zoneinfo}
+    mkdir -p $LFS/usr/{,local/}share/man/man{1..8}
+    mkdir -p $LFS/var/{cache,local,log,mail,opt,spool}
+    mkdir -p $LFS/var/lib/{color,misc,locate}
+    ln -sf /run $LFS/var/run
+    ln -sf /run/lock $LFS/var/lock
+    install -d -m 0750 $LFS/root
+    install -d -m 1777 $LFS/tmp $LFS/var/tmp
+       
     # LFS 12.2 Section 7.6
     ln -s /proc/self/mounts $LFS/etc/mtab
-	localedef -i C -f UTF-8 C.UTF-8
 
-    touch /var/log/{btmp,lastlog,faillog,wtmp}
-	chgrp -v utmp /var/log/lastlog
-	chmod -v 664  /var/log/lastlog
-	chmod -v 600  /var/log/btmp
+    touch $LFS/var/log/{btmp,lastlog,faillog,wtmp}
+	chgrp -v utmp $LFS/var/log/lastlog
+	chmod -v 664  $LFS/var/log/lastlog
+	chmod -v 600  $LFS/var/log/btmp
 
+    # setup EFI partition
+    mkfs.fat -F32 $LOOP_P1
+    mkdir -p $LFS/boot
+    mount $LOOP_P1 $LFS/boot
+    dosfslabel $LOOP_P1 $LFSEFILABEL
+    
     # in no particular part of the book, but still needed
     cp ./bk/config-6.10.11 $LFS/boot
     mkdir -p $LFS/boot/grub
@@ -365,9 +362,9 @@ function init_image {
 	  mount -vt tmpfs -o nosuid,nodev tmpfs $LFS/dev/shm
 	fi
 
-    if [ ! -f build-state ]; then
-        touch build-state
-        chmod 777 build-state
+    if [ ! -f state ]; then
+        touch state
+        chmod 777 state
     fi
     
     set +x
@@ -495,8 +492,8 @@ function build_package {
     { $VERBOSE && echo "Building $NAME phase $PHASE..."; } || echo -n "Building $NAME phase $PHASE... "
     local PKG_NAME=PKG_$([ -n "$NAME_OVERRIDE" ] && echo $NAME_OVERRIDE || echo $NAME | tr a-z A-Z)
 
-    local LOG_FILE=$([ $PHASE -eq 5 ] && echo "$EXTENSION/logs/${NAME}.log" || echo "$LOG_DIR/${NAME}_phase${PHASE}.log")
-    local SCRIPT_PATH=$([ $PHASE -eq 5 ] && echo $EXTENSION/scripts/${NAME}.sh || echo ./phase${PHASE}/${NAME}.sh)
+    local LOG_FILE=$([ $PHASE -eq 6 ] && echo "$EXTENSION/logs/${NAME}.log" || echo "$LOG_DIR/${NAME}_phase${PHASE}.log")
+    local SCRIPT_PATH=$([ $PHASE -eq 6 ] && echo $EXTENSION/scripts/${NAME}.sh || echo ./phase${PHASE}/${NAME}.sh)
 
     if [ "$NAME_OVERRIDE" == "_" ]
     then
@@ -594,8 +591,8 @@ function build_phase {
 
     local PHASE_DIR=./phase$PHASE 
 
-    # Phase 5 == a build extension
-    [ $PHASE -eq 5 ] && PHASE_DIR=$EXTENSION
+    # Phase 6 == a build extension
+    [ $PHASE -eq 6 ] && PHASE_DIR=$EXTENSION
 
     # make sure ./logs/ dir exists
     mkdir -p $LOG_DIR
@@ -634,13 +631,13 @@ function build_phase {
         return 1
     fi
 	
-	set -x
+	$VERBOSE && set -x
 	# Phase 4 == support systemd
 	if [ $PHASE -eq 4 ];then
 		cp $LFS/../../configuare/* $LFS/sources
 		config_systemd
 	fi
-	set +x
+	$VERBOSE && set +x
 	
     touch $LFS/root/.phase$PHASE
     
@@ -711,7 +708,7 @@ function build_extension {
     fi
 
     # build extension
-    build_phase 5 || return 1
+    build_phase 6 || return 1
 }
 
 function install_image {
@@ -741,7 +738,7 @@ function install_image {
         ;;
     esac
 
-    read -p "WARNING: This will delete all contents of the device '$INSTALL_TGT'. Continue? (Y/N): " CONFIRM
+    read -p "WARNING: This will delete all contents of the device '$INSTALL_TGT'. Continue? (y/N): " CONFIRM
     if [[ $CONFIRM != [yY] && $CONFIRM != [yY][eE][sS] ]]
     then
         echo "Cancelled."
@@ -781,7 +778,8 @@ function install_image {
     local INSTALL_P1="${INSTALL_TGT}${PART_PREFIX}1"
     local INSTALL_P2="${INSTALL_TGT}${PART_PREFIX}2"
     local INSTALL_P3="${INSTALL_TGT}${PART_PREFIX}3"
-    mkfs.fat -F32 $INSTALL_P1 &> /dev/null
+    # mkfs.fat -F32 $INSTALL_P1 &> /dev/null
+	mkfs.vfat $INSTALL_P1 &> /dev/null
     dosfslabel $INSTALL_P1 $LFSEFILABEL
     
     mkswap $INSTALL_P2 &> /dev/null
@@ -800,7 +798,7 @@ function install_image {
 	$VERBOSE && read -p "Press Enter to continue..."
 
     mount --bind /dev $INSTALL_MOUNT/dev
-    mount --bind /dev/pts $INSTALL_MOUNT/dev/pts
+    mount -vt devpts devpts -o gid=5,mode=0620 $INSTALL_MOUNT/dev/pts
     mount -t sysfs sysfs $INSTALL_MOUNT/sys
     mount -vt tmpfs tmpfs $INSTALL_MOUNT/run
     mount -vt proc proc $INSTALL_MOUNT/proc
@@ -811,11 +809,11 @@ function install_image {
 	cp bk/unicode.pf2 $EFI_PARTITION/grub
 	
 	echo "2-----done."
-	
+
 	$VERBOSE && read -p "Press Enter to continue..."
-	mkdir -p $INSTALL_MOUNT/boot/efi
-	local EFI_INSTALL=$INSTALL_MOUNT/boot/efi
-	echo "Mounting EFI partition to $INSTALL_MOUNT/boot/ ..."
+	mkdir -p "$INSTALL_MOUNT"/boot/efi
+	local EFI_INSTALL="$INSTALL_MOUNT"/boot/efi
+	echo "Mounting EFI partition to "$INSTALL_MOUNT"/boot/ ..."
 	mount $INSTALL_P1 $EFI_INSTALL
 	if [ $? -ne 0 ]; then
 		echo "Failed to mount EFI partition. Exiting..."
@@ -823,27 +821,31 @@ function install_image {
 	fi
 	#--------------------------------------------------------------------------------------------------------------
     local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LFS --recheck --debug"
-    # local UPDATE_GRUB_CMD="update-grub"
+    local UPDATE_GRUB_CMD="grub-mkconfig -o /boot/efi/EFI/LFS/grub.cfg"
     
     chroot $INSTALL_MOUNT /usr/bin/bash -c "mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars"
+    
     echo "------------------"
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "[ -d /sys/firmware/efi ] && echo -e "UEFI mode" || echo -e "Legacy mode""
 	echo "------------------"
 	
-    $VERBOSE && echo "Installing GRUB. This may take a few minutes... " || echo -n "Installing GRUB. This may take a few minutes... "
+    $VERBOSE && echo "Installing GRUB. This may take a few minutes... " || echo "Installing GRUB. This may take a few minutes... "
     chroot $INSTALL_MOUNT /usr/bin/bash -c "$GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
-    # $VERBOSE && echo "Updating GRUB. This may take a few minutes... " || echo -n "Updating GRUB. This may take a few minutes... "
-    chroot $INSTALL_MOUNT /usr/bin/bash -c "efibootmgr" |& { $VERBOSE && cat || cat > /dev/null; }
+
+    chroot $INSTALL_MOUNT /usr/bin/bash -c "efibootmgr | cut -f 1" |& { $VERBOSE && cat || cat > /dev/null; }
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "sync" |& { $VERBOSE && cat || cat > /dev/null; }
 	
 	$VERBOSE && read -p "Press Enter to continue..."
 	
 	#---------------------------------------------------------------------------------------------------
     # make sure grub.cfg is pointing at the right drive
-    local PARTUUID=$(lsblk -o PARTUUID $INSTALL_TGT | tail -1)
+    local P3UUID=$(lsblk -o UUID $INSTALL_P3 | tail -1)
     local PART3UUID=$(lsblk -o PARTUUID $INSTALL_P3 | tail -1)
-    sed -Ei "s/root=PARTUUID=[0-9a-z-]+/root=PARTUUID=${PARTUUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
-    sed -Ei "s/--set=root/--set=root --fs-uuid ${PART3UUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
+    sed -Ei "s/root=PARTUUID=[0-9a-z-]+/root=PARTUUID=${PART3UUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
+    sed -Ei "s/--set=root --fs-uuid */--set=root --fs-uuid ${P3UUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
+    
+    $VERBOSE && echo "Updating GRUB. This may take a few minutes... " || echo "Updating GRUB. This may take a few minutes... "
+    chroot $INSTALL_MOUNT /usr/bin/bash -c "$UPDATE_GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
     
 	# update fstab
 	MOUNT_POINT="/boot/efi"
@@ -851,8 +853,8 @@ function install_image {
 	SWAP_DEVICE_PARTITION="${INSTALL_TGT}${PART_PREFIX}2"
 	
 	# command to add new context to the end of /etc/fstab
-	NEW_ENTRY="${EFI_DEVICE_PARTITION}\t$MOUNT_POINT\tvfat\tdefaults\t0\t1"
-	SWAP_ENTRY="${SWAP_DEVICE_PARTITION}\tnone\tswap\tsw\t0\t0"
+	NEW_ENTRY="${EFI_DEVICE_PARTITION}\\t$MOUNT_POINT\\tvfat\\tdefaults\\t0\\t1"
+	SWAP_ENTRY="${SWAP_DEVICE_PARTITION}\\tnone\\tswap\\tsw\\t0\\t0"
 	echo -e "$NEW_ENTRY" | sudo tee -a $INSTALL_MOUNT/etc/fstab
 	echo -e "$SWAP_ENTRY" | sudo tee -a $INSTALL_MOUNT/etc/fstab
 	
@@ -898,6 +900,19 @@ function clean_image {
     rm $STATE_FILE
 }
 
+function time_count {
+	# Time slot
+	end_time=$(date +%s)
+	elapsed_time=$((end_time - start_time))
+
+	# Switch format
+	minutes=$((elapsed_time / 60))
+	seconds=$((elapsed_time % 60))
+
+	# Output elapsed Time
+	echo "Running Build Scripts $1 Spend: ${minutes} Minutes ${seconds} Seconds."
+}
+
 function main {
     # Perform single operations
     $CHECKDEPS && check_dependencies && exit
@@ -930,15 +945,16 @@ function main {
     trap "echo 'build failed.' && cd $FULLPATH && unmount_image && exit 1" ERR
 
     build_phase 1 || { unmount_image && exit; }
-
+	time_count phase_1
+	
     $ONEOFF && $FOUNDSTARTPHASE && unmount_image && exit
 
     build_phase 2 || { unmount_image && exit; }
-
+	time_count phase_2
+	
     $ONEOFF && $FOUNDSTARTPHASE && unmount_image && exit
 
     build_phase 3 || { unmount_image && exit; }
-
     # phase 3 cleanup
     if $BUILDALL || [ "$STARTPHASE" -le "3" ]
     then
@@ -946,11 +962,18 @@ function main {
         find $LFS/usr/{lib,libexec} -name \*.la -delete
         rm -rf $LFS/tools
     fi
-
+	time_count phase_3
+	
     $ONEOFF && $FOUNDSTARTPHASE && unmount_image && exit
 
     build_phase 4 || { unmount_image && exit; }
-
+	time_count phase_4
+	
+    $ONEOFF && $FOUNDSTARTPHASE && unmount_image && exit
+    
+    build_phase 5 || { unmount_image && exit; }
+	time_count phase_5
+	
     $ONEOFF && $FOUNDSTARTPHASE && unmount_image && exit
 
     [ -n "$EXTENSION" ] && { build_extension || { unmount_image && exit; }; }
@@ -961,13 +984,16 @@ function main {
     rm -rf $LFS/home/tester
     sed -i 's/^.*tester.*$//' $LFS/etc/{passwd,group}
     rm -rf $LFS/sources
-    # rm -f build-state
+    # rm -f state
     
     # unmount and detach image
     unmount_image
 
     echo "build successful."
 }
+
+# Get Start Time in sec
+start_time=$(date +%s) 
 
 # ###############
 # Parse arguments
@@ -1096,13 +1122,13 @@ done
 
 if [ -n "$STARTPHASE" ]
 then
-    if ! [[ "$STARTPHASE" =~ ^[1-5]$ ]]
+    if ! [[ "$STARTPHASE" =~ ^[1-6]$ ]]
     then
-        echo "ERROR: -p|--start-phase must specify a number between 1 and 5."
+        echo "ERROR: -p|--start-phase must specify a number between 1 and 6."
         exit 1
-    elif [ "$STARTPHASE" -eq 5 ] && [ -z "$EXTENSION" ]
+    elif [ "$STARTPHASE" -eq 6 ] && [ -z "$EXTENSION" ]
     then
-        echo "ERROR: phase 5 only exists if an -x|--extend has been specified."
+        echo "ERROR: phase 6 only exists if an -x|--extend has been specified."
         exit 1
     elif [ ! -f $LFS_IMG ]
     then
@@ -1127,9 +1153,9 @@ then
     then
         echo "ERROR: -x|--extend has no effect without either -b|--build-all or -p|--start-phase set."
         exit 1
-    elif $ONEOFF && [ "$STARTPHASE" -ne 5 ]
+    elif $ONEOFF && [ "$STARTPHASE" -ne 6 ]
     then
-        echo "ERROR: -x|--extend has no effect if -o|--one-off is set and -p|--start-phase != 5."
+        echo "ERROR: -x|--extend has no effect if -o|--one-off is set and -p|--start-phase != 6."
         exit 1
     elif [ ! -d "$EXTENSION" ]
     then
@@ -1146,3 +1172,5 @@ fi
 load_state
 main
 
+# Output total Time
+time_count all

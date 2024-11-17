@@ -1,4 +1,6 @@
 packages/*
-log/*
+packages/**
+logs/*
+logs/**
 rinux7.img
 mnt/*
