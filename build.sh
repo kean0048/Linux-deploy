@@ -171,6 +171,9 @@ function install_template {
 }
 
 function config_systemd {
+	NAME="system_config"
+	local LOG_FILE=$([ $PHASE -eq 6 ] && echo "$EXTENSION/logs/${NAME}.log" || echo "$LOG_DIR/${NAME}_phase${PHASE}.log")
+	
 	local CONFIG_INSTR="
         set -ex
         pushd sources > /dev/null
@@ -318,7 +321,7 @@ function init_image {
     dosfslabel $LOOP_P1 $LFSEFILABEL
     
     # in no particular part of the book, but still needed
-    cp ./bk/config-6.10.11 $LFS/boot
+    # cp ./bk/config-6.12.1 $LFS/boot
     mkdir -p $LFS/boot/grub
     mkdir -p $LFS/etc/{modprobe.d,ld.so.conf.d}
 
@@ -334,6 +337,8 @@ function init_image {
     do
         install_static $f
     done
+    
+    # kernel configuare
     if [ -n "$KERNELCONFIG" ]
     then
         cp $KERNELCONFIG $LFS/boot/config-$KERNELVERS
@@ -633,7 +638,7 @@ function build_phase {
 	
 	$VERBOSE && set -x
 	# Phase 4 == support systemd
-	if [ $PHASE -eq 4 ];then
+	if [ $PHASE -eq 5 ];then
 		cp $LFS/../../configuare/* $LFS/sources
 		config_systemd
 	fi
@@ -784,14 +789,14 @@ function install_image {
     
     mkswap $INSTALL_P2 &> /dev/null
     
-    mkfs -t $LFS_FS $INSTALL_P3 &> /dev/null
+    mkfs.ext4 $INSTALL_P3 &> /dev/null
     e2label $INSTALL_P3 $LFSROOTLABEL
 
     # mount install partitions
     mount $INSTALL_P3 $INSTALL_MOUNT
     mount $LOOP_P2 $LFS
 
-    $VERBOSE && echo "Copying files... " || echo -n "Copying files... "
+    $VERBOSE && echo "Copying files... " || echo "Copying files... "
     cp -r $LFS/* $INSTALL_MOUNT/
     echo "1-----done."
 	
@@ -813,17 +818,16 @@ function install_image {
 	$VERBOSE && read -p "Press Enter to continue..."
 	mkdir -p "$INSTALL_MOUNT"/boot/efi
 	local EFI_INSTALL="$INSTALL_MOUNT"/boot/efi
-	echo "Mounting EFI partition to "$INSTALL_MOUNT"/boot/ ..."
+	echo "Mounting EFI partition to "$EFI_INSTALL" ..."
 	mount $INSTALL_P1 $EFI_INSTALL
 	if [ $? -ne 0 ]; then
 		echo "Failed to mount EFI partition. Exiting..."
 		exit 1
 	fi
 	#--------------------------------------------------------------------------------------------------------------
-    local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LFS --recheck --debug"
+    local GRUB_CMD="grub-install --target=x86_64-efi --removable"
     local UPDATE_GRUB_CMD="grub-mkconfig -o /boot/efi/EFI/LFS/grub.cfg"
-    
-    chroot $INSTALL_MOUNT /usr/bin/bash -c "mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars"
+    local UPDATE_GRUB_CMD2="grub-mkconfig -o /boot/grub/grub.cfg"
     
     echo "------------------"
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "[ -d /sys/firmware/efi ] && echo -e "UEFI mode" || echo -e "Legacy mode""
@@ -831,7 +835,14 @@ function install_image {
 	
     $VERBOSE && echo "Installing GRUB. This may take a few minutes... " || echo "Installing GRUB. This may take a few minutes... "
     chroot $INSTALL_MOUNT /usr/bin/bash -c "$GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
-
+	
+    # local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LFS --recheck --removable"
+	chroot $INSTALL_MOUNT /usr/bin/bash -c "mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars"
+	
+    local GRUB_CMD_CHECK="grub-install --bootloader-id=LFS --recheck"
+    $VERBOSE && echo "Rechecking GRUB. This may take a few minutes... " || echo "Rechecking GRUB. This may take a few minutes... "
+    chroot $INSTALL_MOUNT /usr/bin/bash -c "$GRUB_CMD_CHECK" |& { $VERBOSE && cat || cat > /dev/null; }
+    
     chroot $INSTALL_MOUNT /usr/bin/bash -c "efibootmgr | cut -f 1" |& { $VERBOSE && cat || cat > /dev/null; }
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "sync" |& { $VERBOSE && cat || cat > /dev/null; }
 	
@@ -842,10 +853,11 @@ function install_image {
     local P3UUID=$(lsblk -o UUID $INSTALL_P3 | tail -1)
     local PART3UUID=$(lsblk -o PARTUUID $INSTALL_P3 | tail -1)
     sed -Ei "s/root=PARTUUID=[0-9a-z-]+/root=PARTUUID=${PART3UUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
-    sed -Ei "s/--set=root --fs-uuid */--set=root --fs-uuid ${P3UUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
+    sed -Ei "s/--set=root --fs-uuid[^[:space:]]*.*/--set=root --fs-uuid ${P3UUID}/" $INSTALL_MOUNT/boot/grub/grub.cfg
     
     $VERBOSE && echo "Updating GRUB. This may take a few minutes... " || echo "Updating GRUB. This may take a few minutes... "
     chroot $INSTALL_MOUNT /usr/bin/bash -c "$UPDATE_GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
+    chroot $INSTALL_MOUNT /usr/bin/bash -c "$UPDATE_GRUB_CMD2" |& { $VERBOSE && cat || cat > /dev/null; }
     
 	# update fstab
 	MOUNT_POINT="/boot/efi"
@@ -853,10 +865,10 @@ function install_image {
 	SWAP_DEVICE_PARTITION="${INSTALL_TGT}${PART_PREFIX}2"
 	
 	# command to add new context to the end of /etc/fstab
-	NEW_ENTRY="${EFI_DEVICE_PARTITION}\\t$MOUNT_POINT\\tvfat\\tdefaults\\t0\\t1"
-	SWAP_ENTRY="${SWAP_DEVICE_PARTITION}\\tnone\\tswap\\tsw\\t0\\t0"
+	NEW_ENTRY="${EFI_DEVICE_PARTITION} \\t $MOUNT_POINT \\t vfat \\t codepage=437,iocharset=iso8859-1 \\t 0 \\t 1"
+	# SWAP_ENTRY="${SWAP_DEVICE_PARTITION} \\t swap \\t swap \\t sw \\t 0 \\t 0 "
 	echo -e "$NEW_ENTRY" | sudo tee -a $INSTALL_MOUNT/etc/fstab
-	echo -e "$SWAP_ENTRY" | sudo tee -a $INSTALL_MOUNT/etc/fstab
+	# echo -e "$SWAP_ENTRY" | sudo tee -a $INSTALL_MOUNT/etc/fstab
 	
 	# umount $EFI_PARTITION
     echo "3-----done."

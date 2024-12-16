@@ -1,4 +1,8 @@
 # Perl Phase 3
+
+patch -Np1 -i ../perl-5.40.0-fix-compilation-in-eprefix-bug-939014.patch
+patch -Np1 -i ../perl-5.40.0-alignment.patch
+
 sh Configure -des                                         \
              -D prefix=/usr                               \
              -D vendorprefix=/usr                         \

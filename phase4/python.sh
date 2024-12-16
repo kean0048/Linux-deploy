@@ -4,8 +4,8 @@
             --with-system-expat  \
             --enable-optimizations
 
-make
-
+echo $(MAKEFLAGS)
+make -j8
 make install
 
 cat > /etc/pip.conf << EOF
@@ -14,10 +14,10 @@ root-user-action = ignore
 disable-pip-version-check = true
 EOF
 
-install -v -dm755 /usr/share/doc/python-3.12.5/html
+install -v -dm755 /usr/share/doc/python-3.13.0/html
 
 tar --no-same-owner \
-    -xvf ../python-3.12.5-docs-html.tar.bz2
-cp -R --no-preserve=mode python-3.12.5-docs-html/* \
-    /usr/share/doc/python-3.12.5/html
+    -xvf ../python-3.13.0-docs-html.tar.bz2
+cp -R --no-preserve=mode python-3.13.0-docs-html/* \
+    /usr/share/doc/python-3.13.0/html
 

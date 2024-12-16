@@ -9,8 +9,9 @@ FULLPATH=$(cd $(dirname $0) && pwd)
 # Version and Kernel
 # ~~~~~~~~~~~~~~~~~~~~~~~
 
-export LFS_VERSION=${LFS_VERSION:-12.2}   # LFS version
-export KERNELVERS=${KERNELVERS:-6.10.11}    # Kernel version
+export LFS_VERSION=${LFS_VERSION:-12.2.43-systemd}   # LFS version
+export KERNELVERS=${KERNELVERS:-6.12.1}    # Kernel version
+export KERNELCONFIG=${KERNELCONFIG:-$FULLPATH/bk/config-$KERNELVERS}
 export LFS_TGT=$(uname -m)-lfs-linux-gnu
 export ROOT_PASSWD=root
 
@@ -30,7 +31,7 @@ export INSTALL_MOUNT=${INSTALL_MOUNT:-$FULLPATH/mnt/install} # Install mount poi
 # ~~~~~~~~~~~~~~~~~~~~~~~
 
 export LFS_IMG=${LFS_IMG:-$FULLPATH/rinux7.img}         # Image file
-export LFS_IMG_SIZE=${LFS_IMG_SIZE:-$((20*1024*1024*1024))} # Image size (10 GiB)
+export LFS_IMG_SIZE=${LFS_IMG_SIZE:-$((10*1024*1024*1024))} # Image size (10 GiB)
 export LFS_FS=${LFS_FS:-ext4}                           # Filesystem type
 export LFSROOTLABEL=${LFSROOTLABEL:-LFSROOT}            # Root filesystem label
 export LFSEFILABEL=${LFSEFILABEL:-LFSEFI}               # EFI filesystem label
@@ -45,7 +46,7 @@ export MAKEFLAGS=${MAKEFLAGS:--j8}              # Make flags
 export RUN_TESTS=${RUN_TESTS:-false}            # Run tests flag
 export ROOT_PASSWD=${ROOT_PASSWD:-password}     # Root password
 export LFSHOSTNAME=${LFSHOSTNAME:-lfs}          # Hostname
-export STATE_FILE=${STATE_FILE:-$FULLPATH/build-state}     # Build stage file
+export STATE_FILE=${STATE_FILE:-$FULLPATH/state}     # Build stage file
 
 # #######################
 # Partitioning Instructions
@@ -57,7 +58,7 @@ g       # create GPT partition table
 n       # new partition
 1       # partition number 1
         # default - first sector
-+800M   # 512 MB EFI system partition
++600M   # 512 MB EFI system partition
 t       # change partition type
 1       # EFI System
 n
@@ -81,7 +82,7 @@ g       # create GPT partition table
 n       # new partition
 1       # partition number 1
         # default - first sector
-+800M   # 512 MB EFI system partition
++600M   # 512 MB EFI system partition
 t       # change partition type
 1       # EFI System
 n       # new partition
@@ -98,7 +99,7 @@ w       # write the partition table
 REQUIRED_KEYS="MAKEFLAGS PACKAGE_LIST PACKAGE_DIR LOG_DIR KEEP_LOGS LFS LFS_TGT"
 REQUIRED_KEYS="$REQUIRED_KEYS LFS_FS LFS_IMG LFS_IMG_SIZE ROOT_PASSWD RUN_TESTS"
 REQUIRED_KEYS="$REQUIRED_KEYS TESTLOG_DIR LFSHOSTNAME LFSROOTLABEL LFSEFILABEL"
-REQUIRED_KEYS="$REQUIRED_KEYS LFSFSTYPE KERNELVERS FDISK_INSTR"
+REQUIRED_KEYS="$REQUIRED_KEYS LFSFSTYPE KERNELVERS KERNELCONFIG FDISK_INSTR FDISK_LOOP_INSTR"
 
 # Validate that all required configuration keys are set
 for KEY in $REQUIRED_KEYS

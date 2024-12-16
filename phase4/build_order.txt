@@ -59,6 +59,10 @@ diffutils
 gawk
 findutils
 groff
+mandoc
+efivar
+popt
+efibootmgr
 grub
 gzip
 iproute2

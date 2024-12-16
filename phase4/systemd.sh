@@ -22,7 +22,7 @@ meson setup ..                \
       -D nobody-group=nogroup \
       -D sysupdate=disabled   \
       -D ukify=disabled       \
-      -D docdir=/usr/share/doc/systemd-256.4
+      -D docdir=/usr/share/doc/systemd-256.5
       
 ninja
 echo 'NAME="Linux From Scratch"' > /etc/os-release
@@ -30,7 +30,7 @@ echo 'NAME="Linux From Scratch"' > /etc/os-release
 
 ninja install
 
-tar -xf ../../systemd-man-pages-256.4.tar.xz \
+tar -xf ../../systemd-man-pages-256.5.tar.xz \
     --no-same-owner --strip-components=1   \
     -C /usr/share/man
     

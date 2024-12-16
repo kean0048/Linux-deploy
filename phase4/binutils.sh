@@ -1,4 +1,6 @@
 # Binutils Phase 4
+patch -Np1 -i ../binutils-2.43.1-upstream_fix-1.patch
+
 mkdir build
 cd build
 
