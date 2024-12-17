@@ -322,7 +322,7 @@ function init_image {
     
     # in no particular part of the book, but still needed
     # cp ./bk/config-6.12.1 $LFS/boot
-    mkdir -p $LFS/boot/grub
+    # mkdir -p $LFS/boot/grub
     mkdir -p $LFS/etc/{modprobe.d,ld.so.conf.d}
 
     # removed at end of build
@@ -332,6 +332,7 @@ function init_image {
     cp ./packages/* $LFS/sources
 
     # install static files
+    set -x
     echo $LFSHOSTNAME > $LFS/etc/hostname
     for f in ./static/*
     do
@@ -349,7 +350,8 @@ function init_image {
     do
         install_template $f
     done
-
+	set +x
+	
     # make special device files
     mknod -m 600 $LFS/dev/console c 5 1
     mknod -m 666 $LFS/dev/null c 1 3

@@ -2,10 +2,12 @@
 ./configure --prefix=/usr                           \
             --docdir=/usr/share/doc/procps-ng-4.0.4 \
             --disable-static                        \
-            --disable-kill                          \
-            --with-systemd
+            --disable-kill
 
-make src_w_LDADD='$(LDADD) -lsystemd'
+#            --with-systemd
+
+# make src_w_LDADD='$(LDADD) -lsystemd'
+make 
 
 if $RUN_TESTS
 then

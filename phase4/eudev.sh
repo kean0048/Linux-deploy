@@ -5,7 +5,7 @@
             --enable-manpages       \
             --disable-static
 
-make
+make 
 
 mkdir -p /usr/lib/udev/rules.d
 mkdir -p /etc/udev/rules.d

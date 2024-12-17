@@ -9,7 +9,8 @@ FULLPATH=$(cd $(dirname $0) && pwd)
 # Version and Kernel
 # ~~~~~~~~~~~~~~~~~~~~~~~
 
-export LFS_VERSION=${LFS_VERSION:-12.2.43-systemd}   # LFS version
+# export LFS_VERSION=${LFS_VERSION:-12.2.43-systemd}   # LFS version
+export LFS_VERSION=${LFS_VERSION:-12.2.43}   # LFS version
 export KERNELVERS=${KERNELVERS:-6.12.1}    # Kernel version
 export KERNELCONFIG=${KERNELCONFIG:-$FULLPATH/bk/config-$KERNELVERS}
 export LFS_TGT=$(uname -m)-lfs-linux-gnu
@@ -42,7 +43,7 @@ export LFSFSTYPE=${LFSFSTYPE:-ext4}                     # Filesystem type
 # ~~~~~~~~~~~~~~~~~~~~~~~
 
 export KEEP_LOGS=true
-export MAKEFLAGS=${MAKEFLAGS:--j8}              # Make flags
+export MAKEFLAGS=${MAKEFLAGS:--j`nproc`}              # Make flags
 export RUN_TESTS=${RUN_TESTS:-false}            # Run tests flag
 export ROOT_PASSWD=${ROOT_PASSWD:-password}     # Root password
 export LFSHOSTNAME=${LFSHOSTNAME:-lfs}          # Hostname

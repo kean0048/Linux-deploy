@@ -6,6 +6,7 @@ export PKG_BASH=https://ftp.gnu.org/gnu/bash/bash-5.2.37.tar.gz
 export PKG_BC=https://github.com/gavinhoward/bc/releases/download/7.0.3/bc-7.0.3.tar.xz
 export PKG_BINUTILS=https://sourceware.org/pub/binutils/releases/binutils-2.43.1.tar.xz
 export PKG_BISON=https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz
+export PKG_EUDEV=http://sources.buildroot.net/eudev/eudev-3.2.11.tar.gz
 export PKG_BZIP2=https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz
 export PKG_CHECK=https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz
 export PKG_COREUTILS=https://ftp.gnu.org/gnu/coreutils/coreutils-9.5.tar.xz
