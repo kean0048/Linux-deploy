@@ -73,12 +73,11 @@ patch
 tar
 texinfo
 vim
-markupsafe
-jinja2
-systemd
-dbus
+eudev
 mandb
 procps
 utillinux
 e2fsprogs
-
+sysklogd
+sysvinit
+lfsbootscripts

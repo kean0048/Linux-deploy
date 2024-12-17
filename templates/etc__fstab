@@ -1,8 +1,7 @@
 # file system      mount-point               type      options             dump  fsck
 #                                                                                order
 
-/dev/sda3		   /                         $LFSFSTYPE defaults             1   1
-efivarfs			   /sys/firmware/efi/efivars efivarfs   defaults 			0   0
+LABEL=$LFSROOTLABEL /                        $LFSFSTYPE defaults             1   1
 proc               /proc                     proc      nosuid,noexec,nodev   0   0
 sysfs              /sys                      sysfs     nosuid,noexec,nodev   0   0
 devpts             /dev/pts                  devpts    gid=5,mode=620        0   0
