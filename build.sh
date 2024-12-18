@@ -322,7 +322,7 @@ function init_image {
     
     # in no particular part of the book, but still needed
     # cp ./bk/config-6.12.1 $LFS/boot
-    # mkdir -p $LFS/boot/grub
+    mkdir -p $LFS/boot/grub
     mkdir -p $LFS/etc/{modprobe.d,ld.so.conf.d}
 
     # removed at end of build
@@ -332,7 +332,6 @@ function init_image {
     cp ./packages/* $LFS/sources
 
     # install static files
-    set -x
     echo $LFSHOSTNAME > $LFS/etc/hostname
     for f in ./static/*
     do
@@ -350,7 +349,6 @@ function init_image {
     do
         install_template $f
     done
-	set +x
 	
     # make special device files
     mknod -m 600 $LFS/dev/console c 5 1
@@ -836,7 +834,8 @@ function install_image {
 	echo "------------------"
 	
     $VERBOSE && echo "Installing GRUB. This may take a few minutes... " || echo "Installing GRUB. This may take a few minutes... "
-    chroot $INSTALL_MOUNT /usr/bin/bash -c "$GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
+    chroot $INSTALL_MOUNT /usr/bin/bash -c "$
+.............00." |& { $VERBOSE && cat || cat > /dev/null; }
 	
     # local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LFS --recheck --removable"
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars"

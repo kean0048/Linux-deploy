@@ -31,7 +31,7 @@ export INSTALL_MOUNT=${INSTALL_MOUNT:-$FULLPATH/mnt/install} # Install mount poi
 # Image Configuration
 # ~~~~~~~~~~~~~~~~~~~~~~~
 
-export LFS_IMG=${LFS_IMG:-$FULLPATH/rinux7.img}         # Image file
+export LFS_IMG=${LFS_IMG:-$FULLPATH/linufs.img}         # Image file
 export LFS_IMG_SIZE=${LFS_IMG_SIZE:-$((10*1024*1024*1024))} # Image size (10 GiB)
 export LFS_FS=${LFS_FS:-ext4}                           # Filesystem type
 export LFSROOTLABEL=${LFSROOTLABEL:-LFSROOT}            # Root filesystem label
