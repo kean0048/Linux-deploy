@@ -349,7 +349,7 @@ function init_image {
     do
         install_template $f
     done
-	
+
     # make special device files
     mknod -m 600 $LFS/dev/console c 5 1
     mknod -m 666 $LFS/dev/null c 1 3
@@ -834,8 +834,7 @@ function install_image {
 	echo "------------------"
 	
     $VERBOSE && echo "Installing GRUB. This may take a few minutes... " || echo "Installing GRUB. This may take a few minutes... "
-    chroot $INSTALL_MOUNT /usr/bin/bash -c "$
-.............00." |& { $VERBOSE && cat || cat > /dev/null; }
+    chroot $INSTALL_MOUNT /usr/bin/bash -c "$GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
 	
     # local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LFS --recheck --removable"
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars"
