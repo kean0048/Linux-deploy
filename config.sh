@@ -32,7 +32,7 @@ export INSTALL_MOUNT=${INSTALL_MOUNT:-$FULLPATH/mnt/install} # Install mount poi
 # ~~~~~~~~~~~~~~~~~~~~~~~
 
 export LFS_IMG=${LFS_IMG:-$FULLPATH/linufs.img}         # Image file
-export LFS_IMG_SIZE=${LFS_IMG_SIZE:-$((10*1024*1024*1024))} # Image size (10 GiB)
+export LFS_IMG_SIZE=${LFS_IMG_SIZE:-$((40*1024*1024*1024))} # Image size (10 GiB)
 export LFS_FS=${LFS_FS:-ext4}                           # Filesystem type
 export LFSROOTLABEL=${LFSROOTLABEL:-LFSROOT}            # Root filesystem label
 export LFSEFILABEL=${LFSEFILABEL:-LFSEFI}               # EFI filesystem label
@@ -59,13 +59,13 @@ g       # create GPT partition table
 n       # new partition
 1       # partition number 1
         # default - first sector
-+600M   # 512 MB EFI system partition
++800M   # 512 MB EFI system partition
 t       # change partition type
 1       # EFI System
 n
 2
 
-+10G
++20G
 t
 2
 19
@@ -83,7 +83,7 @@ g       # create GPT partition table
 n       # new partition
 1       # partition number 1
         # default - first sector
-+600M   # 512 MB EFI system partition
++800M   # 512 MB EFI system partition
 t       # change partition type
 1       # EFI System
 n       # new partition

@@ -2,5 +2,5 @@ packages/*
 packages/**
 logs/*
 logs/**
-rinux7.img
+linufs.img
 mnt/*

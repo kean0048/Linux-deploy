@@ -316,9 +316,9 @@ function init_image {
 
     # setup EFI partition
     mkfs.fat -F32 $LOOP_P1
-    mkdir -p $LFS/boot
-    mount $LOOP_P1 $LFS/boot
-    dosfslabel $LOOP_P1 $LFSEFILABEL
+    mkdir -p $LFS/boot/efi
+    mount $LOOP_P1 $LFS/boot/efi
+    # dosfslabel $LOOP_P1 $LFSEFILABEL
     
     # in no particular part of the book, but still needed
     # cp ./bk/config-6.12.1 $LFS/boot
@@ -784,12 +784,12 @@ function install_image {
     local INSTALL_P2="${INSTALL_TGT}${PART_PREFIX}2"
     local INSTALL_P3="${INSTALL_TGT}${PART_PREFIX}3"
     # mkfs.fat -F32 $INSTALL_P1 &> /dev/null
-	mkfs.vfat $INSTALL_P1 &> /dev/null
+	mkfs.vfat -F 32 $INSTALL_P1 &> /dev/null
     dosfslabel $INSTALL_P1 $LFSEFILABEL
     
     mkswap $INSTALL_P2 &> /dev/null
     
-    mkfs.ext4 $INSTALL_P3 &> /dev/null
+    mkfs -v -t ext4 $INSTALL_P3 &> /dev/null
     e2label $INSTALL_P3 $LFSROOTLABEL
 
     # mount install partitions
@@ -809,8 +809,8 @@ function install_image {
     mount -vt proc proc $INSTALL_MOUNT/proc
 
 	local EFI_PARTITION=$INSTALL_MOUNT/boot
-	mount $LOOP_P1 $LFS/boot/
-	cp -r $LFS/boot/* $EFI_PARTITION
+	mount $LOOP_P1 $LFS/boot/efi
+	cp -r $LFS/boot/efi $EFI_PARTITION
 	cp bk/unicode.pf2 $EFI_PARTITION/grub
 	
 	echo "2-----done."
@@ -825,9 +825,9 @@ function install_image {
 		exit 1
 	fi
 	#--------------------------------------------------------------------------------------------------------------
-    local GRUB_CMD="grub-install --target=x86_64-efi --removable"
+    local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable"
     local UPDATE_GRUB_CMD="grub-mkconfig -o /boot/efi/EFI/LFS/grub.cfg"
-    local UPDATE_GRUB_CMD2="grub-mkconfig -o /boot/grub/grub.cfg"
+    # local UPDATE_GRUB_CMD2="grub-mkconfig -o /boot/grub/grub.cfg"
     
     echo "------------------"
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "[ -d /sys/firmware/efi ] && echo -e "UEFI mode" || echo -e "Legacy mode""
@@ -839,7 +839,7 @@ function install_image {
     # local GRUB_CMD="grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=LFS --recheck --removable"
 	chroot $INSTALL_MOUNT /usr/bin/bash -c "mount -v -t efivarfs efivarfs /sys/firmware/efi/efivars"
 	
-    local GRUB_CMD_CHECK="grub-install --bootloader-id=LFS --recheck"
+    local GRUB_CMD_CHECK="grub-install --bootloader-id=LFS --efi-directory=/boot/efi --recheck"
     $VERBOSE && echo "Rechecking GRUB. This may take a few minutes... " || echo "Rechecking GRUB. This may take a few minutes... "
     chroot $INSTALL_MOUNT /usr/bin/bash -c "$GRUB_CMD_CHECK" |& { $VERBOSE && cat || cat > /dev/null; }
     
@@ -857,7 +857,7 @@ function install_image {
     
     $VERBOSE && echo "Updating GRUB. This may take a few minutes... " || echo "Updating GRUB. This may take a few minutes... "
     chroot $INSTALL_MOUNT /usr/bin/bash -c "$UPDATE_GRUB_CMD" |& { $VERBOSE && cat || cat > /dev/null; }
-    chroot $INSTALL_MOUNT /usr/bin/bash -c "$UPDATE_GRUB_CMD2" |& { $VERBOSE && cat || cat > /dev/null; }
+    # chroot $INSTALL_MOUNT /usr/bin/bash -c "$UPDATE_GRUB_CMD2" |& { $VERBOSE && cat || cat > /dev/null; }
     
 	# update fstab
 	MOUNT_POINT="/boot/efi"
